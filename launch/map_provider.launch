@@ -1,0 +1,8 @@
+
+<launch>
+  
+  <arg name="map_yaml"		default="$(find rr_navigation)/maps/my_room2.yaml"/>
+  <node pkg="map_server"    type="map_server"   name="map_provider"     args="$(arg map_yaml)" output="screen"/>
+
+</launch>
+  

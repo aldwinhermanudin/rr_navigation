@@ -1,0 +1,7 @@
+
+<launch>
+  
+  <!-- rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+        args="-d $(find rr_navigation)/rviz/navigation.rviz"/>
+</launch>

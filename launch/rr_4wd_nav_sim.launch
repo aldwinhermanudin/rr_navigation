@@ -1,0 +1,36 @@
+<launch>
+
+
+  <arg name="use_ekf" default="false"/>
+  <arg name="use_sim_odom" default="true"/>
+
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain"
+      name="laser_filter" output="screen">
+    <rosparam command="load" file="$(find rr_navigation)/param/filter_lidar.yaml" />
+  </node>
+  
+  <node pkg="rr_navigation" type="imu_preprocess" 
+        name="imu_preprocess" output="screen"
+        clear_params="true">
+      <param name="from" type="string" value="imu" />
+      <param name="to" type="string" value="imu/data" />
+      <rosparam file="$(find rr_navigation)/param/imu_covariance_value.yaml" command="load" />
+  </node>
+
+  <!-- Define wheter to use ekf or gazebo's odom -->
+  <group if="$(arg use_ekf)">
+    <include file="$(find rr_navigation)/launch/robot_localization_sim.launch" />  
+  </group>
+
+  <group if="$(arg use_sim_odom)">
+    <node pkg="rr_navigation" type="odom_frame_publisher"
+        name="odom_frame_publisher">
+    </node>
+  </group>
+  <!-- Define wheter to use ekf or gazebo's odom -->
+
+  
+  <include file="$(find rr_navigation)/launch/amcl_sim.launch" />
+  <include file="$(find rr_navigation)/launch/move_base_sim.launch" />
+
+</launch>

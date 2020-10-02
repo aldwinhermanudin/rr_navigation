@@ -1,0 +1,21 @@
+<launch>
+
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain"
+      name="laser_filter" output="screen">
+    <rosparam command="load" file="$(find rr_navigation)/param/filter_lidar.yaml" />
+  </node>
+  
+  <node pkg="rr_navigation" type="imu_preprocess" 
+        name="imu_preprocess" output="screen"
+        clear_params="true">
+      <param name="from" type="string" value="rr/android/imu" />
+      <param name="to" type="string" value="rr/nuc/imu" />
+      <rosparam file="$(find rr_navigation)/param/imu_covariance_value.yaml" command="load" />
+  </node>
+
+  <include file="$(find rr_navigation)/launch/robot_localization.launch" />  
+  
+  <include file="$(find rr_navigation)/launch/amcl.launch" />
+  <include file="$(find rr_navigation)/launch/move_base.launch" />
+
+</launch>
