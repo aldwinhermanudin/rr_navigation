@@ -13,3 +13,7 @@ How to use:
 3. Run navigation script
 
     `roslaunch rr_navigation rr_4wd_nav_sim.launch`
+
+4. Run rViz
+
+    `roslaunch rr_navigation rviz_navigation.launch`
