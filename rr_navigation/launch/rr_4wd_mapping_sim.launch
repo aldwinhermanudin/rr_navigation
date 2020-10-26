@@ -1,5 +1,5 @@
 <launch>
-   
+
   <arg name="use_ekf" default="false"/>
   <arg name="use_sim_odom" default="true"/>
 
@@ -29,9 +29,12 @@
   <!-- Define wheter to use ekf or gazebo's odom -->
 
   
-  <!-- <include file="$(find rr_navigation)/launch/amcl_sim.launch" /> -->
   <include file="$(find rr_navigation)/launch/gmapping_sim.launch" />
   <include file="$(find rr_navigation)/launch/move_base_sim.launch" />
 
+  <!-- uncomment to start auto exploration-->
+  <!-- <node pkg="explore_lite" type="explore" respawn="false" name="explore" output="screen">
+    <rosparam file="$(find rr_navigation)/param/sim/exploration.yaml" command="load" />
+  </node> -->
 
 </launch>
