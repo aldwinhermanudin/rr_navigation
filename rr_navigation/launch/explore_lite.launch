@@ -1,0 +1,7 @@
+<launch>
+  <!-- run rr_4wd_mapping first-->
+  <!-- when run, it will start exploring unknown area -->
+  <node pkg="explore_lite" type="explore" respawn="false" name="explore" output="screen">
+    <rosparam file="$(find rr_navigation)/param/exploration.yaml" command="load" />
+  </node>
+</launch>

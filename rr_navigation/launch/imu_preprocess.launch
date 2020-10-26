@@ -2,7 +2,8 @@
     <node pkg="rr_navigation" type="imu_preprocess" 
           name="imu_preprocess" output="screen"
           clear_params="true">
-        <param name="from" type="string" value="rr/android/imu" />
+        <param name="from" type="string" value="bno055/imu" />
+        <!-- <param name="from" type="string" value="rr/android/imu" /> -->
         <param name="to" type="string" value="rr/nuc/imu" />
         <rosparam file="$(find rr_navigation)/param/imu_covariance_value.yaml" command="load" />
     </node>
