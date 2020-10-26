@@ -1,7 +1,11 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "sensor_msgs/Imu.h"
+#include "geometry_msgs/Quaternion.h"
 #include <exception>
+#include <tf/tf.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 std::string src_topic;
 std::string dst_topic;
@@ -52,6 +56,20 @@ void ProcessIMUCallback( const sensor_msgs::Imu::ConstPtr& msg )
     msg_with_cov.header.frame_id = "base_link";
 
     // not using orientation for now, but axis need to be switched.
+    tf::Quaternion q(
+                        msg->orientation.x,
+                        msg->orientation.y,
+                        msg->orientation.z,
+                        msg->orientation.w
+                    );
+    tf::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+    // transfrom quaternion axis, quaternion still in NED format
+    tf2::Quaternion new_quat;
+    new_quat.setRPY( (0 - pitch ), roll, yaw );
+    msg_with_cov.orientation = tf2::toMsg(new_quat);
 
     // switch x and y axis for linear accel
     msg_with_cov.angular_velocity.y = msg->angular_velocity.x;
