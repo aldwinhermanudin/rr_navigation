@@ -1,0 +1,129 @@
+<launch>
+  <!--
+    $ sudo apt install ros-melodic-turtlebot3* ros-melodic-dwa-local-planner
+    To avoid TF warning about leading '/' in frame name, remove it in:
+       - "/opt/ros/melodic/share/turtlebot3_navigation/param/global_costmap_params.yaml"
+       - "/opt/ros/melodic/share/turtlebot3_navigation/param/local_costmap_params.yaml"
+
+    Example Gazebo:
+    $ export TURTLEBOT3_MODEL=waffle
+    $ roslaunch turtlebot3_gazebo turtlebot3_world.launch
+
+    $ export TURTLEBOT3_MODEL=waffle
+    $ roslaunch rtabmap_ros demo_turtlebot3_navigation.launch
+  -->
+
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain"
+      name="laser_filter" output="screen">
+    <rosparam command="load" file="$(find rr_navigation)/param/filter_lidar.yaml" />
+  </node>
+    
+  <node pkg="bno055_usb_stick" type="bno055_usb_stick_node" name="bosch_imu_node" output="screen" ns="bno055">
+    <param name="port" value="/dev/ttyACM0" />
+  </node>
+
+  <node pkg="rr_navigation" type="imu_preprocess" 
+        name="imu_preprocess" output="screen"
+        clear_params="true">
+      <param name="from" type="string" value="bno055/imu" />
+      <param name="to" type="string" value="rr/nuc/imu" />
+      <rosparam file="$(find rr_navigation)/param/imu_covariance_value.yaml" command="load" />
+  </node>
+
+  <include file="$(find rr_navigation)/launch/robot_localization.launch" />  
+
+  <include file="$(find openni_launch)/launch/openni.launch">
+      <arg name="depth_registration" value="true" />
+  </include>
+  
+  <!-- Arguments for rtabmap-->
+  <arg name="open_rviz" default="true"/>
+  <arg name="rtabmapviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+
+  <arg name="with_camera" default="true"/>
+  <arg name="localization" default="false"/>
+  <arg name="database_path" default="~/.ros/rtabmap.db"/>
+  <arg     if="$(arg localization)" name="rtabmap_args" default=""/>
+  <arg unless="$(arg localization)" name="rtabmap_args" default="-d"/>
+
+  <!-- Turtlebot3 -->
+  <group ns="rtabmap">
+    <!-- Use RGBD synchronization -->
+    <!-- Here is a general example using a standalone nodelet, 
+         but it is recommended to attach this nodelet to nodelet 
+         manager of the camera to avoid topic serialization -->
+    <node pkg="rtabmap_ros" type="rgbd_sync" name="rgbd_sync" output="screen">
+      <remap from="rgb/image"         to="camera/rgb/image_raw"/>
+      <remap from="depth/image"       to="camera/depth/image_raw"/>
+      <remap from="rgb/camera_info"   to="camera/rgb/camera_info"/>
+      <remap from="rgbd_image"      to="rgbd_image"/> <!-- output -->
+
+      <!-- Should be true for not synchronized camera topics 
+           (e.g., false for kinectv2, zed, realsense, true for xtion, kinect360)-->
+      <param name="approx_sync"       value="true"/> 
+    </node>
+  
+    <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="$(arg rtabmap_args)">
+      <param name="database_path"       type="string" value="$(arg database_path)"/>
+      <param name="frame_id"            type="string" value="base_footprint"/>
+      
+      <param name="subscribe_rgb"     type="bool"   value="true"/>
+      <param name="subscribe_depth"   type="bool"   value="false"/>
+      <param name="subscribe_rgbd"    type="bool"   value="true"/>
+      <param name="subscribe_scan"    type="bool"   value="true"/>
+
+      <!-- Should be true for not synchronized camera topics 
+           (e.g., false for kinectv2, zed, realsense, true for xtion, kinect360)-->
+      <param name="approx_sync"       type="bool"   value="true"/>
+
+      <!-- use actionlib to send goals to move_base --> 
+      <param name="use_action_for_goal" type="bool" value="true"/>
+      <remap from="move_base"            to="/move_base"/>
+	
+      <!-- inputs -->
+      <remap from="scan"            to="scan_filtered"/>
+      <remap from="odom"            to="odom/ekf/enc_imu"/>
+      <remap from="rgbd_image"      to="rgbd_image"/>
+
+      <param name="queue_size" type="int" value="10"/>
+
+      <!-- output -->
+      <remap from="grid_map" to="/map"/>
+	
+      <!-- RTAB-Map's parameters -->
+      <param name="RGBD/NeighborLinkRefining" type="string" value="true"/>
+      <param name="RGBD/ProximityBySpace"     type="string" value="true"/>
+      <param name="RGBD/AngularUpdate"        type="string" value="0.01"/>
+      <param name="RGBD/LinearUpdate"         type="string" value="0.01"/>
+      <param name="RGBD/OptimizeFromGraphEnd" type="string" value="false"/>
+      <param name="Grid/FromDepth"            type="string" value="false"/> <!-- occupancy grid from lidar -->
+      <param name="Reg/Force3DoF"             type="string" value="true"/>
+      <param name="Reg/Strategy"              type="string" value="1"/> <!-- 1=ICP -->
+      
+      <!-- ICP parameters -->
+      <param name="Icp/VoxelSize"                 type="string" value="0.05"/>
+      <param name="Icp/MaxCorrespondenceDistance" type="string" value="0.1"/>
+
+      <!-- localization mode -->
+      <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
+      <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>
+    </node>
+
+    <!-- visualization with rtabmapviz -->
+    <node if="$(arg rtabmapviz)" pkg="rtabmap_ros" type="rtabmapviz" name="rtabmapviz" args="-d $(find rtabmap_ros)/launch/config/rgbd_gui.ini" output="screen">
+      <param name="subscribe_scan"   type="bool"   value="true"/>
+      <param name="subscribe_odom"   type="bool"   value="true"/>
+      <param name="frame_id"         type="string" value="base_footprint"/>
+      <param name="approx_sync"      type="bool"   value="true"/>
+
+      <remap from="odom"            to="odom/ekf/enc_imu"/>
+      <remap from="scan"            to="scan_filtered"/>
+    </node>
+  </group>
+
+  <!-- move_base -->
+  <!-- <include file="$(find rr_navigation)/launch/amcl.launch" /> -->
+  <include file="$(find rr_navigation)/launch/move_base.launch" />
+
+</launch>
