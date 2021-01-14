@@ -10,6 +10,7 @@
 
   <!-- <arg name="map_yaml"              default="$(find rr_navigation)/maps/apt_one_expand.yaml"/> -->
   <arg name="map_yaml"              default="$(find rr_navigation)/maps/my_room2.yaml"/>
+  <!-- <arg name="map_yaml"              default="$(find rr_navigation)/maps/jones_lobby.yaml"/> -->
   <node pkg="map_server"    type="map_server"   name="map_provider"     args="$(arg map_yaml)" output="screen"/>
 
   <node pkg="amcl" type="amcl" name="amcl" output="screen">

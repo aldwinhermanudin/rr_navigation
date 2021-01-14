@@ -8,16 +8,18 @@ DWAPlannerROS:
   min_vel_y: 0.0  # diff drive robot
 
 # The velocity when robot is moving in a straight line
-  max_vel_trans: 0.5 # choose slightly less than the base's capability
-  min_vel_trans: 0.21  # this is the min trans velocity when there is negligible rotational velocity
+  max_vel_trans: 0.45 # choose slightly less than the base's capability
+  min_vel_trans: 0.20  # this is the min trans velocity when there is negligible rotational velocity
 
-  max_vel_theta: 3.0
-  min_vel_theta: 1.1 # to make a sharp turn make this low
+  max_vel_theta: 1.6
+  min_vel_theta: 1.25 # to make a sharp turn make this low
+  # min_vel_theta: 1.1 # to make a sharp turn make this low
 
-  acc_lim_x: 2.1  # to lowest accel with good sharp turn and no oscillattion
+  # acc_lim_x: 2.1  # to lowest accel with good sharp turn and no oscillattion
   # acc_lim_x: 5.0  # to fastest acccel with good movement
+  acc_lim_x: 2.0
   acc_lim_y: 0.0
-  acc_lim_theta: 3.0
+  acc_lim_theta: 8.0
   
 # Goal Tolerance Parametes
   xy_goal_tolerance: 0.2
@@ -32,15 +34,18 @@ DWAPlannerROS:
   controller_frequency: 10.0
 
 # Trajectory Scoring Parameters
-  # path_distance_bias: 5.0   # works for very narrow location
-  # goal_distance_bias: 0.8   # works for very narrow location
+  path_distance_bias: 64.0      # 32.0   - weighting for how much it should stick to the global path plan
+  goal_distance_bias: 24.0      # 24.0   - wighting for how much it should attempt to reach its goal
+  occdist_scale: 0.5            # 0.01   - weighting for how much the controller should avoid obstacles
+  # path_distance_bias: 10.0   # works for very narrow location
+  # goal_distance_bias: 0.5   # works for very narrow location
   # occdist_scale: 0.05       # works for very narrow location
   # path_distance_bias: 10.0    # best config so faar
   # goal_distance_bias: 5.0     # best config so faar
   # occdist_scale: 0.05         # best config so faar
-  path_distance_bias: 15.0
-  goal_distance_bias: 0.5
-  occdist_scale: 0.05
+  # path_distance_bias: 15.0
+  # goal_distance_bias: 0.5
+  # occdist_scale: 0.05
   # path_distance_bias: 64.0
   # goal_distance_bias: 32.0
   # occdist_scale: 0.02
